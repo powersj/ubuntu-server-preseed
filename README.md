@@ -1,5 +1,5 @@
 # Ubuntu Server Preseed
-Takes a given preseed and injects it into a given Ubuntu Server ISO.
+Takes a given preseed and injects it into a given Ubuntu Server ISO (without sudo)
 
 To obtain and run:
 
