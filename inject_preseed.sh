@@ -10,7 +10,7 @@ COUNTRY_CODE="us"
 
 if [[ $# != 2 ]]; then
     echo "$0: A preseed file and ISO file are required as input."
-    echo "$0: $0 [preseed.cfg] [server.iso]"
+    echo "$0: $0 [preseed] [iso]"
     exit 1
 fi
 
