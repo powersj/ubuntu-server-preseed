@@ -21,7 +21,19 @@ Once you generate a new ISO, you can run a quick test by running:
 
 ```
 qemu-img create -f qcow2 vdisk.img 4G 
-qemu-system-x86_64 -enable-kvm -boot d -hda vdisk.img -cpu host -m 1024 -cdrom your-generated-preseed.iso
+qemu-system-x86_64 -enable-kvm  -cpu host -m 1024 -boot d -hda vdisk.img -cdrom [NEW_ISO_HERE]
+```
+
+Or if you wish to boot with the kernel and initrd directly to allow passing kernel paramters directly:
+
+```
+qemu-img create -f qcow2 vdisk.img 4G 
+qemu-system-x86_64 -enable-kvm -cpu host -m 1024 -boot d \
+    -initrd initrd -kernel kernel \
+    -append 'console=ttyS0 priority=critical' \
+    -display none -nographic \
+    -hda vdisk.img \
+    -cdrom [NEW_ISO_HERE]
 ```
 
 ## Locale and Country Code

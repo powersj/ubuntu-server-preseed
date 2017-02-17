@@ -30,12 +30,15 @@ ISO_DIR="iso"
 ISO_NAME_PRESEED="$(basename "${ISO}" ."${ISO##*.}")-preseed.iso"
 ISO_PRESEED="user.seed"
 ISO_BOOT_CFG="isolinux/isolinux.cfg"
+INITRD_DIR="initrd_dir"
 
 function clean_env {
     if [ -d "$ISO_DIR" ]; then
         chmod -R +w "$ISO_DIR"
         rm -rf "$ISO_DIR"
     fi
+
+    rm -rf "$INITRD_DIR" initrd.fakeroot initrd.old
 }
 trap clean_env EXIT
 
@@ -60,8 +63,26 @@ label install
   append  file=/cdrom/preseed/ubuntu-server.seed vga=788 initrd=/install/initrd.gz locale=$LOCALE console-setup/ask_detect=false keymap=$COUNTRY_CODE debian-installer/keymap=$COUNTRY_CODE console-setup/layoutcode=$COUNTRY_CODE auto file=/cdrom/$ISO_PRESEED
 EOF
 
+# Pull out kernel 
+if [ -s  "$ISO_DIR"/install/vmlinuz ]; then
+  cp "$ISO_DIR"/install/vmlinuz kernel
+elif [[ -s  "$ISO_DIR"/install/vmlinux ]]; then
+  cp "$ISO_DIR"/install/vmlinux kernel
+fi
+
+# Pull out initrd and inject preseed there as well
+cp "$ISO_DIR"/install/initrd.gz initrd.old
+mkdir "$INITRD_DIR"
+pushd "$INITRD_DIR"
+zcat ../initrd.old | fakeroot -s ../initrd.fakeroot cpio -i
+cp ../"$PRESEED" preseed.cfg
+find | fakeroot -i ../initrd.fakeroot cpio -o -H newc | gzip -c > ../initrd
+popd
+rm -rf "$INITRD_DIR" initrd.fakeroot initrd.old
+
 # generate new ISO
 chmod +w "$ISO_DIR"/isolinux/isolinux.bin
 genisoimage -o "$ISO_NAME_PRESEED" -r -J -no-emul-boot -boot-load-size 4 -boot-info-table -b isolinux/isolinux.bin -c isolinux/boot.cat ./"$ISO_DIR"
 
+echo "Injected '$PRESEED' into initrd"
 echo "Injected '$PRESEED' into '$ISO', created '$ISO_NAME_PRESEED'"
